@@ -12,7 +12,7 @@ jobs:
       # Step 1: Setup SSH Key
       - name: Setup SSH Key
         env:
-          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_KEY: ${{ secrets.DEPLOY_KEY }}
         run: |
           echo "$SSH_KEY" | bash64 --deocde > s.pem
           chmod 400 s.pem
