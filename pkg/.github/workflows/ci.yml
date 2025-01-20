@@ -4,10 +4,10 @@ name: Go CI/CD Pipeline
 on:
   push:
     branches:
-      - main   # Changed from 'master' to 'main'
+      - main
   pull_request:
     branches:
-      - main   # Changed from 'master' to 'main'
+      - main
 
 jobs:
   build:
@@ -22,7 +22,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.20'  # Wrapped version in quotes
+          go-version: '1.20'
 
       # Install dependencies
       - name: Install dependencies
@@ -39,10 +39,10 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'  # Changed from 'refs/heads/master' to 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Deploy to Server
         run: |
-          scp -i ~/.ssh/my-key my-app user@your-server:/path/to/deploy
+          scp -i ~/.ssh/my-key my-app user@your-server:/path/to/deploy && \
           ssh -i ~/.ssh/my-key user@your-server "sudo systemctl restart my-app"
