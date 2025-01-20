@@ -26,7 +26,7 @@ jobs:
           EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
           ssh -i deploy_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
-            cd /home/ubuntu/user-api-clean-arch
+            cd /home/ubuntu/test
             git pull origin main
           '
 
@@ -43,7 +43,7 @@ jobs:
             # Verify Go installation
             go version
             
-            cd /home/ubuntu/user-api-clean-arch
+            cd /home/ubuntu/test
             go mod tidy
             go test ./internal/controllers -v
             go build -o app ./cmd/app/main.go
