@@ -14,8 +14,8 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
         run: |
-          echo "$SSH_KEY" > site.pem
-          chmod 400 site.pem
+          echo "$SSH_KEY" > s.pem
+          chmod 400 s.pem
 
       # Step 2: Connect to EC2 and Pull Latest Code
       - name: Pull Latest Code from Git
@@ -34,7 +34,7 @@ jobs:
           EC2_USER: ${{ secrets.DEPLOY_USER }}
           EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
-          ssh -i ~/.ssh/new_key -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
+          ssh -i deploy_key -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
             # Install Go
             sudo apt update
             sudo apt install -y golang-go
