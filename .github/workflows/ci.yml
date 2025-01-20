@@ -1,85 +1,65 @@
 ---
-name: Go CI/CD Pipeline
+name: CI/CD Pipeline for user-api
 
 on:
   push:
-    branches:
-      - master
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the Repository
-      - name: Checkout Code
-        uses: actions/checkout@v3
 
-      # Step 2: Setup Go Environment
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.20
-
-      # Step 3: Setup SSH Key for Server
+      # Step 1: Setup SSH Key
       - name: Setup SSH Key
         env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          SSH_KEY: ${{ secrets.DEPLOY_KEY }}
         run: |
-          echo "$DEPLOY_KEY" | base64 --decode > deploy_key.pem
+          echo "$SSH_KEY" | base64 --decode > deploy_key.pem
           chmod 400 deploy_key.pem
 
-      # Step 4: Pull Latest Code on Server
+      # Step 2: Connect to EC2 and Pull Latest Code
       - name: Pull Latest Code from Git
         env:
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+          EC2_USER: ${{ secrets.DEPLOY_USER }}
+          EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
-          ssh -i deploy_key.pem -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_SERVER '
-            set -e
-            cd /path/to/deploy
-            git pull origin master
+          ssh -i deploy_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
+            cd /home/ubuntu/user-api-clean-arch
+            git pull origin main
           '
 
-      # Step 5: Run Tests on Server
-      - name: Run Tests
+      # Step 3: Build Go Application
+      - name: Testing and Building Go Application
         env:
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+          EC2_USER: ${{ secrets.DEPLOY_USER }}
+          EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
-          ssh -i deploy_key.pem -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_SERVER '
-            set -e
-            cd /path/to/deploy
+          ssh -i deploy_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
+            sudo apt update
+            sudo apt install -y golang-go
+
+            # Verify Go installation
+            go version
+            
+            cd /home/ubuntu/user-api-clean-arch
             go mod tidy
-            go test ./... -v
+            go test ./internal/controllers -v
+            go build -o app ./cmd/app/main.go
           '
 
-      # Step 6: Build the Application on Server
-      - name: Build Application
-        env:
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
-        run: |
-          ssh -i deploy_key.pem -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_SERVER '
-            set -e
-            cd /path/to/deploy
-            go build -o my-app cmd/main.go
-          '
-
-      # Step 7: Restart Application Service
+      # Step 4: Restart Application Service
       - name: Restart Application Service
         env:
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+          EC2_USER: ${{ secrets.DEPLOY_USER }}
+          EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
-          ssh -i deploy_key.pem -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_SERVER '
-            set -e
-            sudo systemctl restart my-app.service
-            sudo systemctl status my-app.service --no-pager
+          ssh -i deploy_key.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
+            sudo systemctl restart thefurnishstore.service
           '
 
-      # Step 8: Cleanup SSH Key
+      # Step 5: Cleanup SSH Key
       - name: Cleanup
-        if: always()
         run: |
           rm -f deploy_key.pem
