@@ -1,47 +1,48 @@
+---
 name: Go CI/CD Pipeline
 
 on:
   push:
     branches:
-      - master
+      - main   # Changed from 'master' to 'main'
   pull_request:
     branches:
-      - master
+      - main   # Changed from 'master' to 'main'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    # Checkout the code
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Set up Go environment
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: 1.20
+      # Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'  # Wrapped version in quotes
 
-    # Install dependencies
-    - name: Install dependencies
-      run: go mod tidy
+      # Install dependencies
+      - name: Install dependencies
+        run: go mod tidy
 
-    # Run tests
-    - name: Run tests
-      run: go test ./...
+      # Run tests
+      - name: Run tests
+        run: go test ./...
 
-    # Build the project
-    - name: Build the project
-      run: go build -o my-app cmd/main.go
+      # Build the project
+      - name: Build the project
+        run: go build -o my-app cmd/main.go
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'  # Changed from 'refs/heads/master' to 'refs/heads/main'
 
     steps:
-    - name: Deploy to Server
-      run: |
-        scp -i ~/.ssh/my-key my-app user@your-server:/path/to/deploy
-        ssh -i ~/.ssh/my-key user@your-server "sudo systemctl restart my-app"
+      - name: Deploy to Server
+        run: |
+          scp -i ~/.ssh/my-key my-app user@your-server:/path/to/deploy
+          ssh -i ~/.ssh/my-key user@your-server "sudo systemctl restart my-app"
