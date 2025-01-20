@@ -44,8 +44,8 @@ jobs:
             
             cd /home/ubuntu/test
             go mod tidy
-            go test ./internal/controllers -v
-            go build -o app ./cmd/app/main.go
+            go test ./... -v
+            go build -o nproject  ./cmd/app/main.go
           '
 
       # Step 4: Restart Application Service
