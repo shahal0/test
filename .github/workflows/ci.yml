@@ -31,8 +31,8 @@ jobs:
       # Step 3: Build Go Application aaa
       - name: Testing and Building Go Application
         env:
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_IP: ${{ secrets.EC2_IP }}
+          EC2_USER: ${{ secrets.DEPLOY_USER }}
+          EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
           ssh -i ~/.ssh/new_key -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
             # Install Go
@@ -51,8 +51,8 @@ jobs:
       # Step 4: Restart Application Service
       - name: Restart Application Service
         env:
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_IP: ${{ secrets.EC2_IP }}
+          EC2_USER: ${{ secrets.DEPLOY_USER }}
+          EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
           ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
             sudo systemctl restart thefurnishstore.service
