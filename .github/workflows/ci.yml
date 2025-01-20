@@ -5,44 +5,81 @@ on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code
-      - name: Checkout code
+      # Step 1: Checkout the Repository
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Set up Go environment
-      - name: Set up Go
+      # Step 2: Setup Go Environment
+      - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.20'
+          go-version: 1.20
 
-      # Install dependencies
-      - name: Install dependencies
-        run: go mod tidy
-
-      # Run tests
-      - name: Run tests
-        run: go test ./...
-
-      # Build the project
-      - name: Build the project
-        run: go build -o my-app cmd/main.go
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Deploy to Server
+      # Step 3: Setup SSH Key for Server
+      - name: Setup SSH Key
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
         run: |
-          scp -i ~/.ssh/my-key my-app user@your-server:/path/to/deploy && \
-          ssh -i ~/.ssh/my-key user@your-server "sudo systemctl restart my-app"
+          echo "$DEPLOY_KEY" | base64 --decode > deploy_key.pem
+          chmod 400 deploy_key.pem
+
+      # Step 4: Pull Latest Code on Server
+      - name: Pull Latest Code from Git
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+        run: |
+          ssh -i deploy_key.pem -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_SERVER '
+            set -e
+            cd /path/to/deploy
+            git pull origin master
+          '
+
+      # Step 5: Run Tests on Server
+      - name: Run Tests
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+        run: |
+          ssh -i deploy_key.pem -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_SERVER '
+            set -e
+            cd /path/to/deploy
+            go mod tidy
+            go test ./... -v
+          '
+
+      # Step 6: Build the Application on Server
+      - name: Build Application
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+        run: |
+          ssh -i deploy_key.pem -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_SERVER '
+            set -e
+            cd /path/to/deploy
+            go build -o my-app cmd/main.go
+          '
+
+      # Step 7: Restart Application Service
+      - name: Restart Application Service
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SERVER: ${{ secrets.DEPLOY_SERVER }}
+        run: |
+          ssh -i deploy_key.pem -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_SERVER '
+            set -e
+            sudo systemctl restart my-app.service
+            sudo systemctl status my-app.service --no-pager
+          '
+
+      # Step 8: Cleanup SSH Key
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f deploy_key.pem
