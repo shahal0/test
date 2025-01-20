@@ -42,7 +42,7 @@ jobs:
             # Verify Go installation
             go version
             
-            cd /home/ubuntu/user-api-clean-arch
+            cd /home/ubuntu/test
             go mod tidy
             go test ./internal/controllers -v
             go build -o app ./cmd/app/main.go
