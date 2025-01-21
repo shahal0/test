@@ -34,7 +34,7 @@ jobs:
           EC2_USER: ${{ secrets.DEPLOY_USER }}
           EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
-          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP << 'EOF'
+          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP
             # Update system packages
             sudo apt update
             sudo apt install -y golang-go
@@ -55,7 +55,7 @@ jobs:
           EC2_USER: ${{ secrets.DEPLOY_USER }}
           EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
-          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP << 'EOF'
+          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP
             sudo systemctl restart thefurnishstore.service
           EOF
 
