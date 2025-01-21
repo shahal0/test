@@ -26,6 +26,7 @@ jobs:
           ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
             cd /home/ubuntu/test
             git pull origin master
+          '
 
       # Step 3: Build Go Application
       - name: Testing and Building Go Application
@@ -45,6 +46,7 @@ jobs:
             go mod tidy
             go test ./... -v
             go build -o user-api ./cmd/main.go
+          '
           
 
       # Step 4: Restart Application Service
@@ -55,6 +57,7 @@ jobs:
         run: |
           ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
             sudo systemctl restart thefurnishstore.service
+          '
 
       # Step 5: Cleanup SSH Key
       - name: Cleanup
