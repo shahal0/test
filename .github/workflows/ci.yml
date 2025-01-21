@@ -34,11 +34,11 @@ jobs:
           EC2_USER: ${{ secrets.DEPLOY_USER }}
           EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
-          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
+          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP << EOF
             # Update system packages
             sudo apt update
             sudo apt install -y golang-go
-
+      EOF
             # Verify Go installation
             go version
 
@@ -55,9 +55,9 @@ jobs:
           EC2_USER: ${{ secrets.DEPLOY_USER }}
           EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
-          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
+          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP << EOF
             sudo systemctl restart thefurnishstore.service
-          
+      EOF
 
       # Step 5: Cleanup SSH Key
       - name: Cleanup
