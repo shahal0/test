@@ -14,7 +14,7 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.DEPLOY_KEY }}
         run: |
-          echo "$SSH_KEY"  > s.pem
+          echo "$SSH_KEY" > s.pem
           chmod 400 s.pem
 
       # Step 2: Connect to EC2 and Pull Latest Code
@@ -23,30 +23,31 @@ jobs:
           EC2_USER: ${{ secrets.DEPLOY_USER }}
           EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
-          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
+          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP << 'EOF'
             cd /home/ubuntu/test
             git pull origin master
-          '
+          EOF
 
-      # Step 3: Build Go Application aaa
+      # Step 3: Build Go Application
       - name: Testing and Building Go Application
         env:
           EC2_USER: ${{ secrets.DEPLOY_USER }}
           EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
-          ssh -i deploy_key -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
-            # Install Go
+          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP << 'EOF'
+            # Update system packages
             sudo apt update
             sudo apt install -y golang-go
 
             # Verify Go installation
             go version
-            
+
+            # Navigate to the project directory and build the app
             cd /home/ubuntu/test
             go mod tidy
             go test ./... -v
-            go build -o nproject  ./cmd/main.go
-          '
+            go build -o user-api ./cmd/main.go
+          EOF
 
       # Step 4: Restart Application Service
       - name: Restart Application Service
@@ -54,11 +55,11 @@ jobs:
           EC2_USER: ${{ secrets.DEPLOY_USER }}
           EC2_IP: ${{ secrets.DEPLOY_SERVER }}
         run: |
-          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP '
+          ssh -i s.pem -o StrictHostKeyChecking=no $EC2_USER@$EC2_IP << 'EOF'
             sudo systemctl restart thefurnishstore.service
-          '
+          EOF
 
       # Step 5: Cleanup SSH Key
       - name: Cleanup
         run: |
-          rm -f site.pem
+          rm -f s.pem
